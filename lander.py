@@ -1,9 +1,12 @@
 # My Lunar Lander in Pygame
 
 import pygame
+import math
 
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
-screen = pygame.display.set_mode((800, 600))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
 class LanderSprite(pygame.sprite.Sprite):
@@ -26,7 +29,9 @@ class LanderSprite(pygame.sprite.Sprite):
         self.direction = self.direction - self.TURN_RATE
 
     def fire_engine(self):
-        pass
+        rad = self.direction * math.pi / 180
+        self.vx -= 0.1 * math.sin(rad)
+        self.vy -= 0.1 * math.cos(rad)
 
     def update(self, deltat):
 
@@ -35,8 +40,17 @@ class LanderSprite(pygame.sprite.Sprite):
 
         # Move
         self.x = self.x + self.vx
-        if self.y > 0:
-            self.y = self.y + self.vy
+        if self.x < 0:
+            self.x = 0
+            self.vx = 0
+        if self.x > SCREEN_WIDTH:
+            self.x = SCREEN_WIDTH
+            self.vx = 0
+
+        self.y = self.y + self.vy
+        if self.y < 0:
+            self.y = 0
+            self.vy = 0
 
         self.position = (int(self.x), int(self.y))
 
