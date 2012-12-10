@@ -60,9 +60,26 @@ class LanderSprite(pygame.sprite.Sprite):
         self.rect.center = self.position
 
 
+class GroundSprite(pygame.sprite.Sprite):
+
+    def __init__(self, image, position):
+        pygame.sprite.Sprite.__init__(self)
+        self.src_image = pygame.image.load(image)
+        pygame.sprite.Sprite.__init__(self)
+        self.direction = 0
+
+    def update(self, deltat):
+        # Display
+        self.image = pygame.transform.rotate(self.src_image, self.direction)
+        self.rect = self.image.get_rect()
+        self.rect.center = ((SCREEN_WIDTH / 2), (SCREEN_HEIGHT - (self.rect.height / 2)))
+
 
 lander = LanderSprite('lander.png', (50, 100))
 lander_group = pygame.sprite.RenderPlain(lander)
+
+ground = GroundSprite('floor.png', (0, SCREEN_HEIGHT))
+ground_group = pygame.sprite.RenderPlain(ground)
 
 
 #Loop until the user clicks the close button.
@@ -90,6 +107,8 @@ while done==False:
 
     # RENDERING
     screen.fill((0,0,0))
+    ground_group.update(deltat)
+    ground_group.draw(screen)
     lander_group.update(deltat)
     lander_group.draw(screen)
     pygame.display.flip()
