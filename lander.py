@@ -1,7 +1,8 @@
-# My Lunar Lander in Pygame
+# Lunar Lander in Pygame
+# by Barry Bridgens
 
 import pygame
-import math
+import os, math
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -13,14 +14,18 @@ class LanderSprite(pygame.sprite.Sprite):
 
     TURN_RATE = 2
 
-    def __init__(self, image, position):
+    def __init__(self, image, position, floor):
         pygame.sprite.Sprite.__init__(self)
         self.src_image = pygame.image.load(image)
         pygame.sprite.Sprite.__init__(self)
+        color = self.src_image.get_at((0,0)) #we get the color of the upper-left corner pixel
+        self.src_image.set_colorkey(color)
         self.x, self.y = position
         self.vx = 0.5
         self.vy = 0
         self.direction = 0
+        self.floor = floor
+        self.rect = self.src_image.get_rect()
 
     def left(self):
         self.direction = self.direction + self.TURN_RATE
@@ -48,9 +53,13 @@ class LanderSprite(pygame.sprite.Sprite):
             self.vx = 0
 
         self.y = self.y + self.vy
+        # Top limit
         if self.y < 0:
             self.y = 0
             self.vy = 0
+        # Floor interaction
+        if self.y > (SCREEN_HEIGHT - self.floor.get_height(self.x) - (self.rect.height / 2)):
+            self.y = (SCREEN_HEIGHT - self.floor.get_height(self.x) - (self.rect.height / 2))
 
         self.position = (int(self.x), int(self.y))
 
@@ -67,6 +76,20 @@ class GroundSprite(pygame.sprite.Sprite):
         self.src_image = pygame.image.load(image)
         pygame.sprite.Sprite.__init__(self)
         self.direction = 0
+        # Load height data
+        (root, ext) = os.path.splitext(image)
+        datafile = root + ".dat"
+        self.heights = []
+        with open (datafile, 'r') as f:
+            for line in f:
+                self.heights.append(int(line))
+
+    def get_height(self, x):
+        if x < len(self.heights):
+            h = self.heights[int(x)]
+        else:
+            h = self.heights[len(self.heights) - 1]
+        return(h)
 
     def update(self, deltat):
         # Display
@@ -75,15 +98,15 @@ class GroundSprite(pygame.sprite.Sprite):
         self.rect.center = ((SCREEN_WIDTH / 2), (SCREEN_HEIGHT - (self.rect.height / 2)))
 
 
-lander = LanderSprite('lander.png', (50, 100))
-lander_group = pygame.sprite.RenderPlain(lander)
-
 ground = GroundSprite('floor.png', (0, SCREEN_HEIGHT))
 ground_group = pygame.sprite.RenderPlain(ground)
 
+lander = LanderSprite('lander.png', (50, 100), ground)
+lander_group = pygame.sprite.RenderPlain(lander)
+
 
 #Loop until the user clicks the close button.
-done=False
+done = False
 clock = pygame.time.Clock()
 
 pygame.key.set_repeat(50, 50)
