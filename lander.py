@@ -12,7 +12,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 class LanderSprite(pygame.sprite.Sprite):
 
-    TURN_RATE = 2
+    TURN_RATE = 1
 
     def __init__(self, image, position, floor):
         pygame.sprite.Sprite.__init__(self)
@@ -38,6 +38,25 @@ class LanderSprite(pygame.sprite.Sprite):
         self.vx -= 0.1 * math.sin(rad)
         self.vy -= 0.1 * math.cos(rad)
 
+    def ground_flatness(self):
+        flat_data = []
+        data_points = 0
+        total = 0
+        for x in range(-25, 25):
+            xpos = self.x + x
+            flat_data.append(self.floor.get_height(xpos))
+            data_points = data_points + 1
+        for x in range(1, data_points):
+            total = total + (flat_data[x] - flat_data[x - 1])
+        return(abs(total))
+
+    def landing_ok(self):
+        if ((self.vy < 0.6) and (self.vx < 0.4) and (self.vx > -0.4) and
+            (self.direction < 3) and (self.direction > -3) and self.ground_flatness() < 5):
+            return(True)
+        else:
+            return(False)
+
     def update(self, deltat):
 
         # Gravity
@@ -60,6 +79,16 @@ class LanderSprite(pygame.sprite.Sprite):
         # Floor interaction
         if self.y > (SCREEN_HEIGHT - self.floor.get_height(self.x) - (self.rect.height / 2)):
             self.y = (SCREEN_HEIGHT - self.floor.get_height(self.x) - (self.rect.height / 2))
+            if self.landing_ok():
+                self.vx = 0
+                self.vy = 0
+            else:
+                # Temporary "crash" action
+                self.vx = 0.5
+                self.vy = 0
+                self.x = 50
+                self.y = 100
+                self.direction = 0
 
         self.position = (int(self.x), int(self.y))
 
@@ -67,6 +96,7 @@ class LanderSprite(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.src_image, self.direction)
         self.rect = self.image.get_rect()
         self.rect.center = self.position
+        #print (self.vx, self.vy, self.direction, self.ground_flatness())
 
 
 class GroundSprite(pygame.sprite.Sprite):
